@@ -11,8 +11,14 @@
         </PackageReference>
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\..\eform-sdk\eFormCore\Microting.eForm.csproj" />
-        <ProjectReference Include="..\..\eFormApi.BasePn\eFormApi.BasePn\eFormApi.BasePn.csproj" />
-        <ProjectReference Include="..\..\eform-angular-frontend-base\Microting.EformAngularFrontendBase\Microting.EformAngularFrontendBase.csproj" />
+        <PackageReference Include="Microting.eForm" Version="10.0.16" />
+        <PackageReference Include="Microting.eFormApi.BasePn" Version="10.0.16" />
+        <PackageReference Include="Microting.EformAngularFrontendBase" Version="10.0.18" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="images\icon.png">
+            <Pack>true</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
     </ItemGroup>
 </Project>
