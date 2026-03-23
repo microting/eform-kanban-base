@@ -1,0 +1,34 @@
+name: .NET Pull requests
+
+on:
+  pull_request:
+    branches: [ master, stable ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Start MariaDB
+      run: |
+        docker pull mariadb:10.8
+        docker run --name mariadbtest -e MYSQL_ROOT_PASSWORD=secretpassword -p 3306:3306 -d mariadb:10.8
+    - name: Sleep 15 seconds
+      run: sleep 15
+    - name: Start rabbitmq
+      run: |
+        docker pull rabbitmq:latest
+        docker run -d --hostname my-rabbit --name some-rabbit -e RABBITMQ_DEFAULT_USER=admin -e RABBITMQ_DEFAULT_PASS=password -p5672:5672 rabbitmq:latest
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 10.0.x
+    - name: Install dependencies
+      run: dotnet restore
+    - name: Get the version
+      id: get_version
+      run: echo "VERSION=$(echo $GITHUB_REF | cut -d / -f 3 | cut -d 'v' -f 2)" >> $GITHUB_OUTPUT
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    - name: Unit Tests
+      run: dotnet test --no-restore -c Release -v n Microting.KanbanBase.Tests/Microting.KanbanBase.Tests.csproj
