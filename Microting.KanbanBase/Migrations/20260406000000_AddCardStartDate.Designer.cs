@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microting.KanbanBase.Infrastructure.Data;
 
@@ -11,9 +12,10 @@ using Microting.KanbanBase.Infrastructure.Data;
 namespace Microting.KanbanBase.Migrations
 {
     [DbContext(typeof(KanbanPnDbContext))]
-    partial class KanbanPnDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260406000000_AddCardStartDate")]
+    partial class AddCardStartDate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
