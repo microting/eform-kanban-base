@@ -15,6 +15,7 @@ public class CardVersion : BaseEntity
     public CardType CardType { get; set; }
     public Priority Priority { get; set; }
     public int? StoryPoints { get; set; }
+    public DateTime? StartDate { get; set; }
     public DateTime? DueDate { get; set; }
     public int? SprintId { get; set; }
     public int? ProjectId { get; set; }
