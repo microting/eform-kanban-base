@@ -25,6 +25,9 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<ActivityLogEntry> ActivityLogEntries { get; set; }
     public DbSet<CardDependency> CardDependencies { get; set; }
     public DbSet<Project> Projects { get; set; }
+    public DbSet<GitHubAppSetting> GitHubAppSettings { get; set; }
+    public DbSet<ProjectRepository> ProjectRepositories { get; set; }
+    public DbSet<CardGitHubLink> CardGitHubLinks { get; set; }
 
     // Version entity DbSets
     public DbSet<BoardVersion> BoardVersions { get; set; }
@@ -41,6 +44,9 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<ActivityLogEntryVersion> ActivityLogEntryVersions { get; set; }
     public DbSet<CardDependencyVersion> CardDependencyVersions { get; set; }
     public DbSet<ProjectVersion> ProjectVersions { get; set; }
+    public DbSet<GitHubAppSettingVersion> GitHubAppSettingVersions { get; set; }
+    public DbSet<ProjectRepositoryVersion> ProjectRepositoryVersions { get; set; }
+    public DbSet<CardGitHubLinkVersion> CardGitHubLinkVersions { get; set; }
 
     // Plugin common tables
     public DbSet<PluginConfigurationValue> PluginConfigurationValues { get; set; }
@@ -96,8 +102,30 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         {
             entity.Property(e => e.Name).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Description).HasMaxLength(2000);
-            entity.Property(e => e.GitHubOwner).HasMaxLength(200);
-            entity.Property(e => e.GitHubRepo).HasMaxLength(200);
+            entity.HasMany(e => e.Repositories).WithOne(e => e.Project).HasForeignKey(e => e.ProjectId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ProjectRepository
+        modelBuilder.Entity<ProjectRepository>(entity =>
+        {
+            entity.Property(e => e.Owner).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Repo).HasMaxLength(200).IsRequired();
+            entity.HasIndex(e => new { e.ProjectId, e.Owner, e.Repo }).IsUnique();
+        });
+
+        // CardGitHubLink
+        modelBuilder.Entity<CardGitHubLink>(entity =>
+        {
+            entity.HasIndex(e => new { e.CardId, e.ProjectRepositoryId, e.IssueNumber }).IsUnique();
+            entity.HasOne(e => e.Card).WithMany(e => e.GitHubLinks).HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.ProjectRepository).WithMany().HasForeignKey(e => e.ProjectRepositoryId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // GitHubAppSetting
+        modelBuilder.Entity<GitHubAppSetting>(entity =>
+        {
+            entity.Property(e => e.AppName).HasMaxLength(255);
+            entity.Property(e => e.ClientId).HasMaxLength(255);
         });
 
         // ActivityLogEntry

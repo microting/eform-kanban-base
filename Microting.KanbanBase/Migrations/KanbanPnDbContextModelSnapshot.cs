@@ -511,9 +511,6 @@ namespace Microting.KanbanBase.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int?>("GitHubIssueNumber")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime(6)");
 
@@ -994,9 +991,6 @@ namespace Microting.KanbanBase.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int?>("GitHubIssueNumber")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("StartDate")
                         .HasColumnType("datetime(6)");
 
@@ -1235,6 +1229,333 @@ namespace Microting.KanbanBase.Migrations
                     b.ToTable("CommentVersions");
                 });
 
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.CardGitHubLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CardId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IssueNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectRepositoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectRepositoryId");
+
+                    b.HasIndex("CardId", "ProjectRepositoryId", "IssueNumber")
+                        .IsUnique();
+
+                    b.ToTable("CardGitHubLinks");
+                });
+
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.CardGitHubLinkVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CardGitHubLinkId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CardId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IssueNumber")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectRepositoryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CardGitHubLinkVersions");
+                });
+
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.GitHubAppSetting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<long>("AppId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AppName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ClientId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("ClientSecretEncrypted")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ClientSecretIv")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PrivateKeyEncrypted")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PrivateKeyIv")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WebhookSecret")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GitHubAppSettings");
+                });
+
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.GitHubAppSettingVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<long>("AppId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("AppName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ClientId")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ClientSecretEncrypted")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ClientSecretIv")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GitHubAppSettingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PrivateKeyEncrypted")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PrivateKeyIv")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WebhookSecret")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("GitHubAppSettingVersions");
+                });
+
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.ProjectRepository", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("GitHubPatEncrypted")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("GitHubPatIv")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Owner")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Repo")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProjectId", "Owner", "Repo")
+                        .IsUnique();
+
+                    b.ToTable("ProjectRepositories");
+                });
+
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.ProjectRepositoryVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("GitHubPatEncrypted")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("GitHubPatIv")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Owner")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProjectRepositoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Repo")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("Source")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ProjectRepositoryVersions");
+                });
+
             modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.Project", b =>
                 {
                     b.Property<int>("Id")
@@ -1253,19 +1574,8 @@ namespace Microting.KanbanBase.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("varchar(2000)");
 
-                    b.Property<string>("GitHubOwner")
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
-
-                    b.Property<string>("GitHubPatEncrypted")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("GitHubPatIv")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("GitHubRepo")
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
+                    b.Property<long?>("GitHubAppInstallationId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1307,17 +1617,8 @@ namespace Microting.KanbanBase.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("longtext");
 
-                    b.Property<string>("GitHubOwner")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("GitHubPatEncrypted")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("GitHubPatIv")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("GitHubRepo")
-                        .HasColumnType("longtext");
+                    b.Property<long?>("GitHubAppInstallationId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1820,6 +2121,25 @@ namespace Microting.KanbanBase.Migrations
                     b.Navigation("Card");
                 });
 
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.CardGitHubLink", b =>
+                {
+                    b.HasOne("Microting.KanbanBase.Infrastructure.Data.Entities.Card", "Card")
+                        .WithMany("GitHubLinks")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microting.KanbanBase.Infrastructure.Data.Entities.ProjectRepository", "ProjectRepository")
+                        .WithMany()
+                        .HasForeignKey("ProjectRepositoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Card");
+
+                    b.Navigation("ProjectRepository");
+                });
+
             modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.CardDependency", b =>
                 {
                     b.HasOne("Microting.KanbanBase.Infrastructure.Data.Entities.Card", "PredecessorCard")
@@ -1913,6 +2233,17 @@ namespace Microting.KanbanBase.Migrations
                     b.Navigation("Board");
                 });
 
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.ProjectRepository", b =>
+                {
+                    b.HasOne("Microting.KanbanBase.Infrastructure.Data.Entities.Project", "Project")
+                        .WithMany("Repositories")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("Microting.eFormApi.BasePn.Infrastructure.Database.Entities.PluginGroupPermission", b =>
                 {
                     b.HasOne("Microting.eFormApi.BasePn.Infrastructure.Database.Entities.PluginPermission", "Permission")
@@ -1949,6 +2280,8 @@ namespace Microting.KanbanBase.Migrations
 
                     b.Navigation("Comments");
 
+                    b.Navigation("GitHubLinks");
+
                     b.Navigation("PredecessorLinks");
 
                     b.Navigation("SuccessorLinks");
@@ -1964,6 +2297,8 @@ namespace Microting.KanbanBase.Migrations
             modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.Project", b =>
                 {
                     b.Navigation("Cards");
+
+                    b.Navigation("Repositories");
                 });
 
             modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.Sprint", b =>

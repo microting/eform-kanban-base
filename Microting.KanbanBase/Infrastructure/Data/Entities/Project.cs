@@ -6,10 +6,8 @@ public class Project : KanbanPnBase
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public string? GitHubOwner { get; set; }
-    public string? GitHubRepo { get; set; }
-    public string? GitHubPatEncrypted { get; set; }
-    public string? GitHubPatIv { get; set; }
+    public long? GitHubAppInstallationId { get; set; }
 
     public virtual ICollection<Card> Cards { get; set; } = new List<Card>();
+    public virtual ICollection<ProjectRepository> Repositories { get; set; } = new List<ProjectRepository>();
 }

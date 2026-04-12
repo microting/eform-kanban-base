@@ -22,8 +22,6 @@ public class Card : KanbanPnBase
     public virtual Sprint? Sprint { get; set; }
     public int? ProjectId { get; set; }
     public virtual Project? Project { get; set; }
-    public int? GitHubIssueNumber { get; set; }
-
     public virtual ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public virtual ICollection<Attachment> Attachments { get; set; } = new List<Attachment>();
     public virtual ICollection<CardTask> Tasks { get; set; } = new List<CardTask>();
@@ -32,4 +30,5 @@ public class Card : KanbanPnBase
     public virtual ICollection<CardAssignee> Assignees { get; set; } = new List<CardAssignee>();
     public virtual ICollection<CardDependency> PredecessorLinks { get; set; } = new List<CardDependency>();
     public virtual ICollection<CardDependency> SuccessorLinks { get; set; } = new List<CardDependency>();
+    public virtual ICollection<CardGitHubLink> GitHubLinks { get; set; } = new List<CardGitHubLink>();
 }
