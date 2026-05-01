@@ -31,4 +31,16 @@ public class Card : KanbanPnBase
     public virtual ICollection<CardDependency> PredecessorLinks { get; set; } = new List<CardDependency>();
     public virtual ICollection<CardDependency> SuccessorLinks { get; set; } = new List<CardDependency>();
     public virtual ICollection<CardGitHubLink> GitHubLinks { get; set; } = new List<CardGitHubLink>();
+
+    // Userback feedback metadata
+    public FeedbackType FeedbackType { get; set; } = FeedbackType.None;
+    public int? Rating { get; set; }
+    public int VoteCount { get; set; }
+    public string? SubmitterName { get; set; }
+    public string? SubmitterEmail { get; set; }
+    public CardSource Source { get; set; } = CardSource.Manual;
+    public long? UserbackFeedbackId { get; set; }
+
+    public virtual CardCaptureContext? CaptureContext { get; set; }
+    public virtual ICollection<CardConsoleLog> ConsoleLogs { get; set; } = new List<CardConsoleLog>();
 }

@@ -19,4 +19,13 @@ public class CardVersion : BaseEntity
     public DateTime? DueDate { get; set; }
     public int? SprintId { get; set; }
     public int? ProjectId { get; set; }
+
+    // Userback feedback metadata
+    public FeedbackType FeedbackType { get; set; } = FeedbackType.None;
+    public int? Rating { get; set; }
+    public int VoteCount { get; set; }
+    public string? SubmitterName { get; set; }
+    public string? SubmitterEmail { get; set; }
+    public CardSource Source { get; set; } = CardSource.Manual;
+    public long? UserbackFeedbackId { get; set; }
 }

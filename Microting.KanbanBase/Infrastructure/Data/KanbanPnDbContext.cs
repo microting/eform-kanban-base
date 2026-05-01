@@ -28,6 +28,10 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<GitHubAppSetting> GitHubAppSettings { get; set; }
     public DbSet<ProjectRepository> ProjectRepositories { get; set; }
     public DbSet<CardGitHubLink> CardGitHubLinks { get; set; }
+    public DbSet<CardCaptureContext> CardCaptureContexts { get; set; }
+    public DbSet<CardConsoleLog> CardConsoleLogs { get; set; }
+    public DbSet<UserbackImportRun> UserbackImportRuns { get; set; }
+    public DbSet<UserbackImportLogEntry> UserbackImportLogEntries { get; set; }
 
     // Version entity DbSets
     public DbSet<BoardVersion> BoardVersions { get; set; }
@@ -47,6 +51,10 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<GitHubAppSettingVersion> GitHubAppSettingVersions { get; set; }
     public DbSet<ProjectRepositoryVersion> ProjectRepositoryVersions { get; set; }
     public DbSet<CardGitHubLinkVersion> CardGitHubLinkVersions { get; set; }
+    public DbSet<CardCaptureContextVersion> CardCaptureContextVersions { get; set; }
+    public DbSet<CardConsoleLogVersion> CardConsoleLogVersions { get; set; }
+    public DbSet<UserbackImportRunVersion> UserbackImportRunVersions { get; set; }
+    public DbSet<UserbackImportLogEntryVersion> UserbackImportLogEntryVersions { get; set; }
 
     // Plugin common tables
     public DbSet<PluginConfigurationValue> PluginConfigurationValues { get; set; }
@@ -89,6 +97,50 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             entity.HasMany(e => e.Assignees).WithOne(e => e.Card).HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(e => e.PredecessorLinks).WithOne(e => e.PredecessorCard).HasForeignKey(e => e.PredecessorCardId).OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(e => e.SuccessorLinks).WithOne(e => e.SuccessorCard).HasForeignKey(e => e.SuccessorCardId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasIndex(e => e.UserbackFeedbackId);
+        });
+
+        // CardCaptureContext (1:1 with Card)
+        modelBuilder.Entity<CardCaptureContext>(entity =>
+        {
+            entity.HasIndex(e => e.CardId).IsUnique();
+            entity.HasOne(e => e.Card).WithOne(c => c.CaptureContext).HasForeignKey<CardCaptureContext>(c => c.CardId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.PageUrl).HasMaxLength(2048);
+            entity.Property(e => e.UserAgent).HasMaxLength(1024);
+            entity.Property(e => e.BrowserName).HasMaxLength(200);
+            entity.Property(e => e.BrowserVersion).HasMaxLength(100);
+            entity.Property(e => e.OsName).HasMaxLength(200);
+            entity.Property(e => e.OsVersion).HasMaxLength(100);
+            entity.Property(e => e.DeviceType).HasMaxLength(100);
+            entity.Property(e => e.WindowSize).HasMaxLength(50);
+            entity.Property(e => e.ScreenResolution).HasMaxLength(50);
+        });
+
+        // CardConsoleLog (1:N with Card)
+        modelBuilder.Entity<CardConsoleLog>(entity =>
+        {
+            entity.HasIndex(e => e.CardId);
+            entity.HasOne(e => e.Card).WithMany(c => c.ConsoleLogs).HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.Message).HasMaxLength(4000).IsRequired();
+            entity.Property(e => e.Source).HasMaxLength(500);
+        });
+
+        // UserbackImportRun
+        modelBuilder.Entity<UserbackImportRun>(entity =>
+        {
+            entity.Property(e => e.ProjectsJson).IsRequired();
+            entity.Property(e => e.ErrorMessage).HasMaxLength(4000);
+        });
+
+        // UserbackImportLogEntry
+        modelBuilder.Entity<UserbackImportLogEntry>(entity =>
+        {
+            entity.HasIndex(e => e.UserbackFeedbackId);
+            entity.HasIndex(e => e.RunId);
+            entity.HasIndex(e => new { e.UserbackFeedbackId, e.Status }).IsUnique();
+            entity.HasOne(e => e.Run).WithMany(r => r.Entries).HasForeignKey(e => e.RunId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Card).WithMany().HasForeignKey(e => e.CardId).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(4000);
         });
 
         // CardDependency
