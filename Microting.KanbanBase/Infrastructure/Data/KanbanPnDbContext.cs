@@ -84,6 +84,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         {
             entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
             entity.HasIndex(e => new { e.BoardId, e.ColumnId, e.Position });
+            entity.HasIndex(e => new { e.BoardId, e.ColumnId, e.WorkflowState, e.Position });
             entity.HasIndex(e => e.SprintId);
             entity.HasIndex(e => e.ProjectId);
             entity.HasOne(e => e.Column).WithMany(e => e.Cards).HasForeignKey(e => e.ColumnId).OnDelete(DeleteBehavior.Cascade);
@@ -169,6 +170,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         modelBuilder.Entity<CardGitHubLink>(entity =>
         {
             entity.HasIndex(e => new { e.CardId, e.ProjectRepositoryId, e.IssueNumber }).IsUnique();
+            entity.HasIndex(e => new { e.CardId, e.WorkflowState });
             entity.HasOne(e => e.Card).WithMany(e => e.GitHubLinks).HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.ProjectRepository).WithMany().HasForeignKey(e => e.ProjectRepositoryId).OnDelete(DeleteBehavior.Restrict);
         });
@@ -200,6 +202,20 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         modelBuilder.Entity<CardAssignee>(entity =>
         {
             entity.HasIndex(e => new { e.CardId, e.UserId }).IsUnique();
+        });
+
+        // Comment
+        modelBuilder.Entity<Comment>(entity =>
+        {
+            entity.HasIndex(e => e.CardId);
+            entity.HasIndex(e => new { e.CardId, e.WorkflowState });
+        });
+
+        // Attachment
+        modelBuilder.Entity<Attachment>(entity =>
+        {
+            entity.HasIndex(e => e.CardId);
+            entity.HasIndex(e => new { e.CardId, e.WorkflowState });
         });
     }
 }
