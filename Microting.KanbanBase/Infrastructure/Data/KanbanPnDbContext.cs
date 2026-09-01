@@ -32,6 +32,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<CardConsoleLog> CardConsoleLogs { get; set; }
     public DbSet<UserbackImportRun> UserbackImportRuns { get; set; }
     public DbSet<UserbackImportLogEntry> UserbackImportLogEntries { get; set; }
+    public DbSet<UserbackProjectSyncState> UserbackProjectSyncStates { get; set; }
 
     // Version entity DbSets
     public DbSet<BoardVersion> BoardVersions { get; set; }
@@ -55,6 +56,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<CardConsoleLogVersion> CardConsoleLogVersions { get; set; }
     public DbSet<UserbackImportRunVersion> UserbackImportRunVersions { get; set; }
     public DbSet<UserbackImportLogEntryVersion> UserbackImportLogEntryVersions { get; set; }
+    public DbSet<UserbackProjectSyncStateVersion> UserbackProjectSyncStateVersions { get; set; }
 
     // Plugin common tables
     public DbSet<PluginConfigurationValue> PluginConfigurationValues { get; set; }
@@ -133,12 +135,21 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             entity.Property(e => e.ErrorMessage).HasMaxLength(4000);
         });
 
+        // UserbackProjectSyncState
+        modelBuilder.Entity<UserbackProjectSyncState>(entity =>
+        {
+            entity.HasIndex(e => e.UserbackProjectId).IsUnique();
+        });
+
         // UserbackImportLogEntry
         modelBuilder.Entity<UserbackImportLogEntry>(entity =>
         {
+            // Deliberately NON-unique. A log entry is a per-run audit record, and two rows for
+            // one feedback id within one run are reachable (an Imported row is committed, then a
+            // downstream fault drops into the per-item catch, which writes a second Failed row).
             entity.HasIndex(e => e.UserbackFeedbackId);
             entity.HasIndex(e => e.RunId);
-            entity.HasIndex(e => new { e.UserbackFeedbackId, e.Status }).IsUnique();
+            entity.HasIndex(e => new { e.RunId, e.UserbackFeedbackId });
             entity.HasOne(e => e.Run).WithMany(r => r.Entries).HasForeignKey(e => e.RunId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.Card).WithMany().HasForeignKey(e => e.CardId).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
             entity.Property(e => e.ErrorMessage).HasMaxLength(4000);
@@ -209,6 +220,9 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         {
             entity.HasIndex(e => e.CardId);
             entity.HasIndex(e => new { e.CardId, e.WorkflowState });
+            // Unique on purpose: it dedupes imported Userback comments. InnoDB allows any number
+            // of NULLs in a unique index, so manually-authored comments are unaffected.
+            entity.HasIndex(e => e.UserbackCommentId).IsUnique();
         });
 
         // Attachment
@@ -216,6 +230,8 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         {
             entity.HasIndex(e => e.CardId);
             entity.HasIndex(e => new { e.CardId, e.WorkflowState });
+            entity.Property(e => e.SourceUrl).HasMaxLength(512);
+            entity.HasIndex(e => new { e.CardId, e.SourceUrl });
         });
     }
 }

@@ -23,4 +23,11 @@ public class Attachment : KanbanPnBase
     public int? ColorDepth { get; set; }
     public string? Location { get; set; }
     public int? VideoDurationMs { get; set; }
+
+    /// <summary>
+    /// Upstream URL the file was fetched from (Userback CDN); NULL for locally uploaded files.
+    /// Acts as the dedupe key for imported media, so a re-sync does not re-download and
+    /// re-insert every attachment.
+    /// </summary>
+    public string? SourceUrl { get; set; }
 }
