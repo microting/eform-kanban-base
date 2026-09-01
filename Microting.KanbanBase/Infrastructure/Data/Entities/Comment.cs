@@ -9,10 +9,16 @@ public class Comment : KanbanPnBase
 
     /// <summary>
     /// Source id of the upstream Userback comment this row was imported from; NULL for
-    /// manually-authored comments. Carries a UNIQUE index so a re-sync cannot duplicate an
-    /// upstream comment. This is intentional and safe: InnoDB permits any number of NULLs in
-    /// a unique index, so user-authored comments (which leave it NULL) are unaffected.
-    /// Do not "fix" the index by removing the uniqueness.
+    /// manually-authored comments.
+    /// <para>
+    /// The backing index (CardId, UserbackCommentId) is deliberately NON-unique, matching
+    /// corrections C5/C6 on the tracking issue. <see cref="KanbanPnBase.Delete"/> SOFT-deletes,
+    /// so a removed row keeps both its UserbackCommentId and its index slot, and MySQL has no
+    /// filtered indexes — a unique index would therefore permanently block re-importing a
+    /// comment that had once been deleted. Re-import uniqueness is enforced in code instead:
+    /// look the row up with FirstOrDefaultAsync on (CardId, UserbackCommentId) and only insert
+    /// when nothing comes back. Do not add IsUnique() here.
+    /// </para>
     /// </summary>
     public long? UserbackCommentId { get; set; }
 }

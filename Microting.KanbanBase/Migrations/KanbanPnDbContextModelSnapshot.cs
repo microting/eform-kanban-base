@@ -188,8 +188,12 @@ namespace Microting.KanbanBase.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("SourceUrl")
-                        .HasMaxLength(512)
-                        .HasColumnType("varchar(512)");
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SourceUrlHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength();
 
                     b.Property<string>("StorageFileName")
                         .IsRequired()
@@ -221,7 +225,7 @@ namespace Microting.KanbanBase.Migrations
 
                     b.HasIndex("CardId");
 
-                    b.HasIndex("CardId", "SourceUrl");
+                    b.HasIndex("CardId", "SourceUrlHash");
 
                     b.HasIndex("CardId", "WorkflowState");
 
@@ -290,6 +294,9 @@ namespace Microting.KanbanBase.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("SourceUrl")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SourceUrlHash")
                         .HasColumnType("longtext");
 
                     b.Property<string>("StorageFileName")
@@ -1611,8 +1618,7 @@ namespace Microting.KanbanBase.Migrations
 
                     b.HasIndex("CardId");
 
-                    b.HasIndex("UserbackCommentId")
-                        .IsUnique();
+                    b.HasIndex("CardId", "UserbackCommentId");
 
                     b.HasIndex("CardId", "WorkflowState");
 
@@ -2483,7 +2489,7 @@ namespace Microting.KanbanBase.Migrations
                     b.Property<int>("CreatedByUserId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("LastSyncedModifiedAt")
+                    b.Property<DateTime?>("LastSyncedModifiedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -2524,7 +2530,7 @@ namespace Microting.KanbanBase.Migrations
                     b.Property<int>("CreatedByUserId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("LastSyncedModifiedAt")
+                    b.Property<DateTime?>("LastSyncedModifiedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<DateTime?>("UpdatedAt")

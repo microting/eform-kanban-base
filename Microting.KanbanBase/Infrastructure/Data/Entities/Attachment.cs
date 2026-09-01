@@ -26,8 +26,19 @@ public class Attachment : KanbanPnBase
 
     /// <summary>
     /// Upstream URL the file was fetched from (Userback CDN); NULL for locally uploaded files.
-    /// Acts as the dedupe key for imported media, so a re-sync does not re-download and
-    /// re-insert every attachment.
+    /// Intentionally unbounded (longtext): the signed share-viewer URLs this holds routinely
+    /// exceed any workable varchar cap, and under STRICT_TRANS_TABLES an over-length value
+    /// throws instead of truncating. Index and dedupe on <see cref="SourceUrlHash"/>, never on
+    /// this column.
     /// </summary>
     public string? SourceUrl { get; set; }
+
+    /// <summary>
+    /// SHA-256 hex digest (64 chars, lowercase) of <see cref="SourceUrl"/>; NULL when SourceUrl
+    /// is NULL. This is the indexable dedupe key for imported media — a fixed-width stand-in for
+    /// a column too long to index, since utf8mb4 varchar(2048) alone would blow past InnoDB's
+    /// 3072-byte index limit. A re-sync matches on (CardId, SourceUrlHash) so it does not
+    /// re-download and re-insert every attachment.
+    /// </summary>
+    public string? SourceUrlHash { get; set; }
 }

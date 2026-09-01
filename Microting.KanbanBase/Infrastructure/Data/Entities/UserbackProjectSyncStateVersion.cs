@@ -7,5 +7,5 @@ public class UserbackProjectSyncStateVersion : BaseEntity
 {
     public int UserbackProjectSyncStateId { get; set; }
     public int UserbackProjectId { get; set; }
-    public DateTime LastSyncedModifiedAt { get; set; }
+    public DateTime? LastSyncedModifiedAt { get; set; }
 }

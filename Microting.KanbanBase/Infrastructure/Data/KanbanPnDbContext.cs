@@ -148,6 +148,11 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             // one feedback id within one run are reachable (an Imported row is committed, then a
             // downstream fault drops into the per-item catch, which writes a second Failed row).
             entity.HasIndex(e => e.UserbackFeedbackId);
+            // (RunId, UserbackFeedbackId) below already carries RunId as its leftmost prefix, so
+            // InnoDB would accept it as the index backing the Run FK — this single-column one is
+            // NOT required for that. It is kept purely because it is the narrowest index for the
+            // "show me one run's log" query, and write cost on an append-only audit table is
+            // negligible. Do not justify it as the FK's index.
             entity.HasIndex(e => e.RunId);
             entity.HasIndex(e => new { e.RunId, e.UserbackFeedbackId });
             entity.HasOne(e => e.Run).WithMany(r => r.Entries).HasForeignKey(e => e.RunId).OnDelete(DeleteBehavior.Cascade);
@@ -220,9 +225,14 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         {
             entity.HasIndex(e => e.CardId);
             entity.HasIndex(e => new { e.CardId, e.WorkflowState });
-            // Unique on purpose: it dedupes imported Userback comments. InnoDB allows any number
-            // of NULLs in a unique index, so manually-authored comments are unaffected.
-            entity.HasIndex(e => e.UserbackCommentId).IsUnique();
+            // Deliberately NON-unique (corrections C5/C6). KanbanPnBase.Delete soft-deletes, so a
+            // removed comment keeps its UserbackCommentId and its index slot, and MySQL has no
+            // filtered indexes — a unique index would permanently block re-importing a comment
+            // that had once been deleted. Re-import uniqueness is enforced in code via a
+            // FirstOrDefaultAsync lookup plus a guarded insert. Card-scoped, because board
+            // resolution is by name and the same upstream comment can legitimately land on more
+            // than one board.
+            entity.HasIndex(e => new { e.CardId, e.UserbackCommentId });
         });
 
         // Attachment
@@ -230,8 +240,13 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         {
             entity.HasIndex(e => e.CardId);
             entity.HasIndex(e => new { e.CardId, e.WorkflowState });
-            entity.Property(e => e.SourceUrl).HasMaxLength(512);
-            entity.HasIndex(e => new { e.CardId, e.SourceUrl });
+            // SourceUrl is intentionally unbounded (longtext) — signed Userback CDN URLs overflow
+            // any workable varchar, and STRICT_TRANS_TABLES turns an over-length value into a
+            // throw the importer's per-media catch would swallow as a warning. Dedupe on the
+            // fixed-width SHA-256 digest instead; utf8mb4 varchar(2048) in an index would exceed
+            // InnoDB's 3072-byte limit.
+            entity.Property(e => e.SourceUrlHash).HasMaxLength(64).IsFixedLength();
+            entity.HasIndex(e => new { e.CardId, e.SourceUrlHash });
         });
     }
 }
