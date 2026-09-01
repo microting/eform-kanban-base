@@ -8,4 +8,5 @@ public class CommentVersion : BaseEntity
     public int CardId { get; set; }
     public int AuthorUserId { get; set; }
     public string Body { get; set; }
+    public long? UserbackCommentId { get; set; }
 }

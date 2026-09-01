@@ -32,6 +32,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<CardConsoleLog> CardConsoleLogs { get; set; }
     public DbSet<UserbackImportRun> UserbackImportRuns { get; set; }
     public DbSet<UserbackImportLogEntry> UserbackImportLogEntries { get; set; }
+    public DbSet<UserbackProjectSyncState> UserbackProjectSyncStates { get; set; }
 
     // Version entity DbSets
     public DbSet<BoardVersion> BoardVersions { get; set; }
@@ -55,6 +56,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<CardConsoleLogVersion> CardConsoleLogVersions { get; set; }
     public DbSet<UserbackImportRunVersion> UserbackImportRunVersions { get; set; }
     public DbSet<UserbackImportLogEntryVersion> UserbackImportLogEntryVersions { get; set; }
+    public DbSet<UserbackProjectSyncStateVersion> UserbackProjectSyncStateVersions { get; set; }
 
     // Plugin common tables
     public DbSet<PluginConfigurationValue> PluginConfigurationValues { get; set; }
@@ -133,12 +135,26 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             entity.Property(e => e.ErrorMessage).HasMaxLength(4000);
         });
 
+        // UserbackProjectSyncState
+        modelBuilder.Entity<UserbackProjectSyncState>(entity =>
+        {
+            entity.HasIndex(e => e.UserbackProjectId).IsUnique();
+        });
+
         // UserbackImportLogEntry
         modelBuilder.Entity<UserbackImportLogEntry>(entity =>
         {
+            // Deliberately NON-unique. A log entry is a per-run audit record, and two rows for
+            // one feedback id within one run are reachable (an Imported row is committed, then a
+            // downstream fault drops into the per-item catch, which writes a second Failed row).
             entity.HasIndex(e => e.UserbackFeedbackId);
+            // (RunId, UserbackFeedbackId) below already carries RunId as its leftmost prefix, so
+            // InnoDB would accept it as the index backing the Run FK — this single-column one is
+            // NOT required for that. It is kept purely because it is the narrowest index for the
+            // "show me one run's log" query, and write cost on an append-only audit table is
+            // negligible. Do not justify it as the FK's index.
             entity.HasIndex(e => e.RunId);
-            entity.HasIndex(e => new { e.UserbackFeedbackId, e.Status }).IsUnique();
+            entity.HasIndex(e => new { e.RunId, e.UserbackFeedbackId });
             entity.HasOne(e => e.Run).WithMany(r => r.Entries).HasForeignKey(e => e.RunId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.Card).WithMany().HasForeignKey(e => e.CardId).IsRequired(false).OnDelete(DeleteBehavior.SetNull);
             entity.Property(e => e.ErrorMessage).HasMaxLength(4000);
@@ -209,6 +225,14 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         {
             entity.HasIndex(e => e.CardId);
             entity.HasIndex(e => new { e.CardId, e.WorkflowState });
+            // Deliberately NON-unique (corrections C5/C6). KanbanPnBase.Delete soft-deletes, so a
+            // removed comment keeps its UserbackCommentId and its index slot, and MySQL has no
+            // filtered indexes — a unique index would permanently block re-importing a comment
+            // that had once been deleted. Re-import uniqueness is enforced in code via a
+            // FirstOrDefaultAsync lookup plus a guarded insert. Card-scoped, because board
+            // resolution is by name and the same upstream comment can legitimately land on more
+            // than one board.
+            entity.HasIndex(e => new { e.CardId, e.UserbackCommentId });
         });
 
         // Attachment
@@ -216,6 +240,13 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         {
             entity.HasIndex(e => e.CardId);
             entity.HasIndex(e => new { e.CardId, e.WorkflowState });
+            // SourceUrl is intentionally unbounded (longtext) — signed Userback CDN URLs overflow
+            // any workable varchar, and STRICT_TRANS_TABLES turns an over-length value into a
+            // throw the importer's per-media catch would swallow as a warning. Dedupe on the
+            // fixed-width SHA-256 digest instead; utf8mb4 varchar(2048) in an index would exceed
+            // InnoDB's 3072-byte limit.
+            entity.Property(e => e.SourceUrlHash).HasMaxLength(64).IsFixedLength();
+            entity.HasIndex(e => new { e.CardId, e.SourceUrlHash });
         });
     }
 }
