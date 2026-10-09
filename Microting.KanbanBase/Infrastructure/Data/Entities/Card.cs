@@ -43,4 +43,5 @@ public class Card : KanbanPnBase
 
     public virtual CardCaptureContext? CaptureContext { get; set; }
     public virtual ICollection<CardConsoleLog> ConsoleLogs { get; set; } = new List<CardConsoleLog>();
+    public virtual ICollection<CardNetworkLog> NetworkLogs { get; set; } = new List<CardNetworkLog>();
 }
