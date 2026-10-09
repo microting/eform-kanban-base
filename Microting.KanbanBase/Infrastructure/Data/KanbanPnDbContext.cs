@@ -30,6 +30,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<CardGitHubLink> CardGitHubLinks { get; set; }
     public DbSet<CardCaptureContext> CardCaptureContexts { get; set; }
     public DbSet<CardConsoleLog> CardConsoleLogs { get; set; }
+    public DbSet<CardNetworkLog> CardNetworkLogs { get; set; }
     public DbSet<UserbackImportRun> UserbackImportRuns { get; set; }
     public DbSet<UserbackImportLogEntry> UserbackImportLogEntries { get; set; }
     public DbSet<UserbackProjectSyncState> UserbackProjectSyncStates { get; set; }
@@ -54,6 +55,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<CardGitHubLinkVersion> CardGitHubLinkVersions { get; set; }
     public DbSet<CardCaptureContextVersion> CardCaptureContextVersions { get; set; }
     public DbSet<CardConsoleLogVersion> CardConsoleLogVersions { get; set; }
+    public DbSet<CardNetworkLogVersion> CardNetworkLogVersions { get; set; }
     public DbSet<UserbackImportRunVersion> UserbackImportRunVersions { get; set; }
     public DbSet<UserbackImportLogEntryVersion> UserbackImportLogEntryVersions { get; set; }
     public DbSet<UserbackProjectSyncStateVersion> UserbackProjectSyncStateVersions { get; set; }
@@ -123,9 +125,51 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         modelBuilder.Entity<CardConsoleLog>(entity =>
         {
             entity.HasIndex(e => e.CardId);
+            // "Show me the errors on this card" is the primary read. Level is low cardinality, but
+            // Error/Exception rows are a small minority of a capture, so the leading CardId makes
+            // this selective enough to be worth the write cost on an append-only table.
+            entity.HasIndex(e => new { e.CardId, e.Level });
             entity.HasOne(e => e.Card).WithMany(c => c.ConsoleLogs).HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);
-            entity.Property(e => e.Message).HasMaxLength(4000).IsRequired();
-            entity.Property(e => e.Source).HasMaxLength(500);
+            // Message and Source are now UNBOUNDED (longtext), widened from varchar(4000)/
+            // varchar(500). Real CDP console output overflows both — a rendered RemoteObject blows
+            // past 4000 chars and Source holds a script URL — and under STRICT_TRANS_TABLES an
+            // over-length value throws, which in the extension's bulk POST rejects the whole
+            // batch. Neither column is indexed, so there is nothing to lose by unbounding them.
+            // Same reasoning as Attachment.SourceUrl below.
+            entity.Property(e => e.Message).IsRequired();
+            entity.Property(e => e.RequestId).HasMaxLength(100);
+        });
+
+        // CardNetworkLog (1:N with Card)
+        modelBuilder.Entity<CardNetworkLog>(entity =>
+        {
+            // Redundant as the FK's backing index — (CardId, StatusCode) below already leads with
+            // CardId, so InnoDB would accept that one. Kept because it is the narrowest index for
+            // "all network rows on this card", which is how the card detail view reads them, and
+            // write cost on an append-only capture table is negligible. Same call as the
+            // UserbackImportLogEntry.RunId index further down.
+            entity.HasIndex(e => e.CardId);
+            // "Show me the failures on this card" — the primary query.
+            entity.HasIndex(e => new { e.CardId, e.StatusCode });
+            // Cross-card: "which cards have a 5xx". Low cardinality overall, but 5xx is rare
+            // enough that the optimiser's index dive finds few rows and uses it.
+            entity.HasIndex(e => e.StatusCode);
+            entity.HasOne(e => e.Card).WithMany(c => c.NetworkLogs).HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);
+            entity.Property(e => e.RequestId).HasMaxLength(100);
+            entity.Property(e => e.Method).HasMaxLength(20);
+            entity.Property(e => e.ResourceType).HasMaxLength(50);
+            entity.Property(e => e.StatusText).HasMaxLength(255);
+            entity.Property(e => e.MimeType).HasMaxLength(255);
+            entity.Property(e => e.Protocol).HasMaxLength(50);
+            // Bracketed IPv6 literal with a zone id is the worst case.
+            entity.Property(e => e.RemoteIpAddress).HasMaxLength(100);
+            entity.Property(e => e.BlockedReason).HasMaxLength(100);
+            // Chrome net error strings ("net::ERR_CONNECTION_REFUSED") are a bounded vocabulary.
+            entity.Property(e => e.FailureText).HasMaxLength(500);
+            // Url, DocumentUrl, the two *HeadersJson, the two bodies, TimingJson and InitiatorJson
+            // are all deliberately left unbounded (longtext) — see the class-level docs on
+            // CardNetworkLog. Do NOT index Url: utf8mb4 varchar(2048) alone already exceeds
+            // InnoDB's 3072-byte index limit.
         });
 
         // UserbackImportRun
