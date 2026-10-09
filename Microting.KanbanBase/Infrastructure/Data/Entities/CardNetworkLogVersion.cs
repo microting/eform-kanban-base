@@ -17,6 +17,14 @@ public class CardNetworkLogVersion : BaseEntity
     public string? RequestId { get; set; }
     public string? Method { get; set; }
     public string? Url { get; set; }
+
+    /// <summary>
+    /// Mirror of <see cref="CardNetworkLog.UrlPath"/> — path component only. Same
+    /// <c>varchar(768)</c> width, but NOT indexed here: nothing queries the audit mirror by URL,
+    /// and the index would double the write cost of every version row.
+    /// </summary>
+    public string? UrlPath { get; set; }
+
     public string? DocumentUrl { get; set; }
     public string? ResourceType { get; set; }
     public int? StatusCode { get; set; }

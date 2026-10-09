@@ -154,8 +154,35 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             // Cross-card: "which cards have a 5xx". Low cardinality overall, but 5xx is rare
             // enough that the optimiser's index dive finds few rows and uses it.
             entity.HasIndex(e => e.StatusCode);
+            // The epic's headline query — "which cards have a 500 from /api/items-planning-pn/tags"
+            // — filters on UrlPath AND StatusCode, so a composite (UrlPath, StatusCode) looks like
+            // the obvious choice. IT IS NOT POSSIBLE. varchar(768) utf8mb4 is 3072 bytes, which is
+            // already the whole of InnoDB's 3072-byte maximum index key length; adding StatusCode's
+            // 4 bytes puts the combined key over the limit and CREATE INDEX fails outright with
+            // error 1071 "Specified key was too long" (verified on MariaDB 11.8, DYNAMIC row
+            // format, in both column orders). A composite would therefore require narrowing UrlPath
+            // below the maximum indexable width, which trades a guaranteed loss (truncated paths)
+            // for a marginal gain.
+            //
+            // Single column on UrlPath instead, and that turns out to lose nothing: this index plus
+            // the (StatusCode) one above give the optimiser an index_merge, which is the composite
+            // by another route. Verified on MariaDB 11.8 over 20k rows / 400 distinct paths —
+            // "WHERE UrlPath = ? AND StatusCode = 500" plans as
+            // "Using intersect(IX_CardNetworkLogs_StatusCode, IX_CardNetworkLogs_UrlPath)",
+            // estimating 1 row, against 206 scanned rows plus a longtext substring match for the
+            // LIKE '%…%' fallback this column exists to replace.
+            //
+            // A single column is also the right shape on its own terms: UrlPath is the selective
+            // half of the predicate (hundreds-to-thousands of distinct paths) while StatusCode is a
+            // handful of values, and it serves the UrlPath-only query too ("every request to this
+            // endpoint, whatever its outcome"). A leading StatusCode would have been wrong either
+            // way — low cardinality first, and useless to that second query.
+            entity.HasIndex(e => e.UrlPath);
             entity.HasOne(e => e.Card).WithMany(c => c.NetworkLogs).HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);
             entity.Property(e => e.RequestId).HasMaxLength(100);
+            // EXACTLY 3072 bytes in utf8mb4 — the maximum indexable width. Widening this by a
+            // single character breaks the index above. See CardNetworkLog.UrlPath.
+            entity.Property(e => e.UrlPath).HasMaxLength(768);
             entity.Property(e => e.Method).HasMaxLength(20);
             entity.Property(e => e.ResourceType).HasMaxLength(50);
             entity.Property(e => e.StatusText).HasMaxLength(255);
@@ -169,7 +196,15 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             // Url, DocumentUrl, the two *HeadersJson, the two bodies, TimingJson and InitiatorJson
             // are all deliberately left unbounded (longtext) — see the class-level docs on
             // CardNetworkLog. Do NOT index Url: utf8mb4 varchar(2048) alone already exceeds
-            // InnoDB's 3072-byte index limit.
+            // InnoDB's 3072-byte index limit. UrlPath is the indexable projection of it.
+        });
+
+        // CardNetworkLogVersion — the audit mirror is otherwise left to convention, but UrlPath is
+        // pinned to the same varchar(768) as the entity so the mirror cannot hold a value the
+        // entity could not. Deliberately NOT indexed: nothing queries the audit table by URL.
+        modelBuilder.Entity<CardNetworkLogVersion>(entity =>
+        {
+            entity.Property(e => e.UrlPath).HasMaxLength(768);
         });
 
         // UserbackImportRun

@@ -1283,6 +1283,10 @@ namespace Microting.KanbanBase.Migrations
                     b.Property<string>("Url")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("UrlPath")
+                        .HasMaxLength(768)
+                        .HasColumnType("varchar(768)");
+
                     b.Property<int>("Version")
                         .HasColumnType("int");
 
@@ -1295,6 +1299,8 @@ namespace Microting.KanbanBase.Migrations
                     b.HasIndex("CardId");
 
                     b.HasIndex("StatusCode");
+
+                    b.HasIndex("UrlPath");
 
                     b.HasIndex("CardId", "StatusCode");
 
@@ -1407,6 +1413,10 @@ namespace Microting.KanbanBase.Migrations
 
                     b.Property<string>("Url")
                         .HasColumnType("longtext");
+
+                    b.Property<string>("UrlPath")
+                        .HasMaxLength(768)
+                        .HasColumnType("varchar(768)");
 
                     b.Property<int>("Version")
                         .HasColumnType("int");

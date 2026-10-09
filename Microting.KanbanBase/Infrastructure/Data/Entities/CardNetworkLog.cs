@@ -44,9 +44,39 @@ public class CardNetworkLog : KanbanPnBase
     /// Full request URL including the query string. Intentionally unbounded (longtext), same
     /// reasoning as <see cref="Attachment.SourceUrl"/>: signed URLs and long query strings exceed
     /// any workable varchar, and utf8mb4 varchar(2048) could not be indexed anyway (InnoDB's
-    /// 3072-byte index limit). NEVER put an index on this column.
+    /// 3072-byte index limit). NEVER put an index on this column — index
+    /// <see cref="UrlPath"/> instead, which exists for exactly that.
     /// </summary>
     public string? Url { get; set; }
+
+    /// <summary>
+    /// The PATH COMPONENT ONLY of <see cref="Url"/> — no scheme, no host, no port, no query
+    /// string, no fragment. For <c>https://app.microting.com/api/items-planning-pn/tags?x=1#f</c>
+    /// this column holds exactly <c>/api/items-planning-pn/tags</c>, leading slash included.
+    /// <para>
+    /// THE CONTRACT IS THE CLIENT'S. Nothing in this library derives or validates this value;
+    /// the capture client (the Chrome extension — microting/eform-kanban-plugin#32) MUST send it
+    /// alongside <see cref="Url"/>. Do not "helpfully" start parsing it out of <see cref="Url"/>
+    /// server-side on a whim: that splits the contract across two writers and the two will drift.
+    /// If the client did not send it, the column is NULL and the row simply does not participate
+    /// in URL-indexed queries.
+    /// </para>
+    /// <para>
+    /// WHY IT EXISTS: epic #25 justifies storing capture as queryable rows with "be able to ask
+    /// 'which cards have a 500 from /api/items-planning-pn/tags' in SQL". That is a query BY URL,
+    /// and <see cref="Url"/> is <c>longtext</c> precisely because it cannot be indexed, so the
+    /// headline query would degrade to a <c>LIKE '%…%'</c> full scan. This column is the indexable
+    /// projection that makes it an index seek.
+    /// </para>
+    /// <para>
+    /// WHY 768: <c>varchar(768)</c> in utf8mb4 is 768 × 4 = 3072 bytes, exactly InnoDB's maximum
+    /// index key length on DYNAMIC/COMPRESSED row format. One character wider and the index cannot
+    /// be created at all (MySQL/MariaDB error 1071). DO NOT WIDEN IT. A path longer than 768
+    /// characters should be stored truncated rather than rejected — <see cref="Url"/> still has
+    /// the authoritative full value.
+    /// </para>
+    /// </summary>
+    public string? UrlPath { get; set; }
 
     /// <summary>
     /// CDP <c>requestWillBeSent.documentURL</c> — the page the request was made from, which is

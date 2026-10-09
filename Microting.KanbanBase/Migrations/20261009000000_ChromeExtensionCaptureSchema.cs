@@ -115,6 +115,8 @@ namespace Microting.KanbanBase.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Url = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    UrlPath = table.Column<string>(type: "varchar(768)", maxLength: 768, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     DocumentUrl = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ResourceType = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true)
@@ -187,6 +189,8 @@ namespace Microting.KanbanBase.Migrations
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Url = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
+                    UrlPath = table.Column<string>(type: "varchar(768)", maxLength: 768, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
                     DocumentUrl = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ResourceType = table.Column<string>(type: "longtext", nullable: true)
@@ -258,6 +262,11 @@ namespace Microting.KanbanBase.Migrations
                 name: "IX_CardNetworkLogs_StatusCode",
                 table: "CardNetworkLogs",
                 column: "StatusCode");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CardNetworkLogs_UrlPath",
+                table: "CardNetworkLogs",
+                column: "UrlPath");
         }
 
         /// <inheritdoc />

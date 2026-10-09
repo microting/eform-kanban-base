@@ -161,6 +161,31 @@ public class ChromeExtensionCaptureSchemaTests
         Assert.That(card.NetworkLogs, Is.Empty);
     }
 
+    [Test]
+    public void CardNetworkLog_UrlPathMirrorsUrlAndIsOptional()
+    {
+        // UrlPath is the indexable projection of Url: Url is longtext because it cannot be
+        // indexed (utf8mb4 varchar(2048) is 8192 bytes, past InnoDB's 3072-byte index key limit),
+        // so the epic's headline query — "which cards have a 500 from /api/items-planning-pn/tags"
+        // — needs a bounded column to seek on. The column is varchar(768): 768 x 4 = 3072 bytes,
+        // EXACTLY the limit. That width is configured in KanbanPnDbContext and asserted by the
+        // generated migration, not here; what this test pins is the CLR shape.
+        //
+        // Nullable, because older rows and any non-extension writer (UserbackImportService) will
+        // not have it, and because only the client can derive it correctly.
+        Assert.Multiple(() =>
+        {
+            AssertPropertyType<CardNetworkLog>(nameof(CardNetworkLog.UrlPath), typeof(string));
+            // The version mirror must match name AND type exactly or MapVersion drops the column
+            // into a Console.WriteLine. Asserted explicitly as well as via the round-trip below,
+            // because this is the one column whose absence from the mirror would be invisible.
+            AssertPropertyType<CardNetworkLogVersion>(nameof(CardNetworkLogVersion.UrlPath), typeof(string));
+
+            Assert.That(new CardNetworkLog().UrlPath, Is.Null);
+            Assert.That(new CardNetworkLogVersion().UrlPath, Is.Null);
+        });
+    }
+
     // ---------------------------------------------------------------------------------------
     // KanbanPnBase.MapVersion copies by exact property NAME and swallows every mismatch into a
     // Console.WriteLine. A rename or a field missed on the version entity therefore drops
@@ -176,6 +201,7 @@ public class ChromeExtensionCaptureSchemaTests
 
         // Sanity: the loop must actually have reached the fields this migration adds.
         Assert.That(expected.Keys, Does.Contain(nameof(CardNetworkLog.Url)));
+        Assert.That(expected.Keys, Does.Contain(nameof(CardNetworkLog.UrlPath)));
         Assert.That(expected.Keys, Does.Contain(nameof(CardNetworkLog.ResponseBody)));
         Assert.That(expected.Keys, Does.Contain(nameof(CardNetworkLog.FailureText)));
         Assert.That(expected.Keys, Does.Contain(nameof(CardNetworkLog.TimingJson)));
