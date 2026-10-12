@@ -42,6 +42,11 @@ public class Card : KanbanPnBase
     public long? UserbackFeedbackId { get; set; }
 
     public virtual CardCaptureContext? CaptureContext { get; set; }
+    /// <summary>Sentry issue id of the report this card triages (set by the integration upsert).</summary>
+    public string? SentryIssueId { get; set; }
+    public string? SentryShortId { get; set; }
+    public string? SentryPermalink { get; set; }
+    public virtual ICollection<CardTenant> Tenants { get; set; } = new List<CardTenant>();
     public virtual ICollection<CardConsoleLog> ConsoleLogs { get; set; } = new List<CardConsoleLog>();
     public virtual ICollection<CardNetworkLog> NetworkLogs { get; set; } = new List<CardNetworkLog>();
 }

@@ -26,6 +26,9 @@ public class CardVersion : BaseEntity
     public int VoteCount { get; set; }
     public string? SubmitterName { get; set; }
     public string? SubmitterEmail { get; set; }
+    public string? SentryIssueId { get; set; }
+    public string? SentryShortId { get; set; }
+    public string? SentryPermalink { get; set; }
     public CardSource Source { get; set; } = CardSource.Manual;
     public long? UserbackFeedbackId { get; set; }
 }

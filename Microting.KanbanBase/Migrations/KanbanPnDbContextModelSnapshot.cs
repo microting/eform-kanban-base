@@ -17,7 +17,7 @@ namespace Microting.KanbanBase.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.5")
+                .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -544,6 +544,18 @@ namespace Microting.KanbanBase.Migrations
                     b.Property<int?>("Rating")
                         .HasColumnType("int");
 
+                    b.Property<string>("SentryIssueId")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("SentryPermalink")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("SentryShortId")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
                     b.Property<int>("Source")
                         .HasColumnType("int");
 
@@ -595,6 +607,8 @@ namespace Microting.KanbanBase.Migrations
                     b.HasIndex("SprintId");
 
                     b.HasIndex("UserbackFeedbackId");
+
+                    b.HasIndex("BoardId", "SentryIssueId");
 
                     b.HasIndex("BoardId", "ColumnId", "Position");
 
@@ -1663,6 +1677,114 @@ namespace Microting.KanbanBase.Migrations
                     b.ToTable("CardTaskVersions");
                 });
 
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.CardTenant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CardId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CustomerNo")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("CvrNo")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("FetchedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("OrganizationName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PaymentStatus")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CardId", "CustomerNo");
+
+                    b.ToTable("CardTenants");
+                });
+
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.CardTenantVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CardId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CardTenantId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CustomerNo")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CvrNo")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("FetchedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("OrganizationName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PaymentStatus")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CardTenantVersions");
+                });
+
             modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.CardVersion", b =>
                 {
                     b.Property<int>("Id")
@@ -1709,6 +1831,15 @@ namespace Microting.KanbanBase.Migrations
 
                     b.Property<int?>("Rating")
                         .HasColumnType("int");
+
+                    b.Property<string>("SentryIssueId")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SentryPermalink")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SentryShortId")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("Source")
                         .HasColumnType("int");
@@ -2087,6 +2218,131 @@ namespace Microting.KanbanBase.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("GitHubAppSettingVersions");
+                });
+
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.IntegrationApiKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("KeyHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("char(64)")
+                        .IsFixedLength();
+
+                    b.Property<string>("KeyPrefix")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<int>("ServiceUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KeyHash")
+                        .IsUnique();
+
+                    b.ToTable("IntegrationApiKeys");
+                });
+
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.IntegrationApiKeyVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("IntegrationApiKeyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("KeyHash")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("KeyPrefix")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("LastUsedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("ServiceUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UpdatedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WorkflowState")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("IntegrationApiKeyVersions");
                 });
 
             modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.Project", b =>
@@ -3227,6 +3483,17 @@ namespace Microting.KanbanBase.Migrations
                     b.Navigation("Card");
                 });
 
+            modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.CardTenant", b =>
+                {
+                    b.HasOne("Microting.KanbanBase.Infrastructure.Data.Entities.Card", "Card")
+                        .WithMany("Tenants")
+                        .HasForeignKey("CardId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Card");
+                });
+
             modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.Column", b =>
                 {
                     b.HasOne("Microting.KanbanBase.Infrastructure.Data.Entities.Board", "Board")
@@ -3349,6 +3616,8 @@ namespace Microting.KanbanBase.Migrations
                     b.Navigation("SuccessorLinks");
 
                     b.Navigation("Tasks");
+
+                    b.Navigation("Tenants");
                 });
 
             modelBuilder.Entity("Microting.KanbanBase.Infrastructure.Data.Entities.Column", b =>
