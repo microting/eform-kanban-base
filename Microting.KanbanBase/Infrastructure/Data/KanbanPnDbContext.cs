@@ -11,6 +11,8 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public KanbanPnDbContext(DbContextOptions<KanbanPnDbContext> options) : base(options) { }
 
     // Main entity DbSets
+    public DbSet<CardTenant> CardTenants { get; set; }
+    public DbSet<IntegrationApiKey> IntegrationApiKeys { get; set; }
     public DbSet<Board> Boards { get; set; }
     public DbSet<Card> Cards { get; set; }
     public DbSet<Column> Columns { get; set; }
@@ -36,6 +38,8 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<UserbackProjectSyncState> UserbackProjectSyncStates { get; set; }
 
     // Version entity DbSets
+    public DbSet<CardTenantVersion> CardTenantVersions { get; set; }
+    public DbSet<IntegrationApiKeyVersion> IntegrationApiKeyVersions { get; set; }
     public DbSet<BoardVersion> BoardVersions { get; set; }
     public DbSet<CardVersion> CardVersions { get; set; }
     public DbSet<ColumnVersion> ColumnVersions { get; set; }
@@ -88,6 +92,13 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         {
             entity.Property(e => e.Title).HasMaxLength(500).IsRequired();
             entity.HasIndex(e => new { e.BoardId, e.ColumnId, e.Position });
+            entity.Property(e => e.SentryIssueId).HasMaxLength(64);
+            entity.Property(e => e.SentryShortId).HasMaxLength(64);
+            entity.Property(e => e.SentryPermalink).HasMaxLength(500);
+            // Deliberately NON-unique: KanbanPnBase.Delete soft-deletes, so a removed card keeps its
+            // SentryIssueId and MySQL has no filtered indexes. One live card per (board, Sentry issue)
+            // is enforced in SentryCardService (Kanban.Pn) with a lookup that skips removed cards.
+            entity.HasIndex(e => new { e.BoardId, e.SentryIssueId });
             entity.HasIndex(e => new { e.BoardId, e.ColumnId, e.WorkflowState, e.Position });
             entity.HasIndex(e => e.SprintId);
             entity.HasIndex(e => e.ProjectId);
@@ -268,6 +279,25 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             entity.HasIndex(e => new { e.CardId, e.WorkflowState });
             entity.HasOne(e => e.Card).WithMany(e => e.GitHubLinks).HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.ProjectRepository).WithMany().HasForeignKey(e => e.ProjectRepositoryId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // CardTenant
+        modelBuilder.Entity<CardTenant>(entity =>
+        {
+            entity.Property(e => e.CustomerNo).HasMaxLength(32).IsRequired();
+            entity.HasIndex(e => new { e.CardId, e.CustomerNo });
+            entity.HasOne(e => e.Card).WithMany(e => e.Tenants).HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // IntegrationApiKey
+        modelBuilder.Entity<IntegrationApiKey>(entity =>
+        {
+            entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.KeyPrefix).HasMaxLength(16).IsRequired();
+            entity.Property(e => e.KeyHash).HasMaxLength(64).IsFixedLength().IsRequired();
+            entity.Property(e => e.Scope).HasMaxLength(64).IsRequired();
+            // Unique is safe here: hashes of random 256-bit keys never repeat, even after a soft delete.
+            entity.HasIndex(e => e.KeyHash).IsUnique();
         });
 
         // GitHubAppSetting
