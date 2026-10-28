@@ -102,7 +102,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             entity.HasIndex(e => new { e.BoardId, e.ColumnId, e.WorkflowState, e.Position });
             entity.HasIndex(e => e.SprintId);
             entity.HasIndex(e => e.ProjectId);
-            entity.HasOne(e => e.Column).WithMany(e => e.Cards).HasForeignKey(e => e.ColumnId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Column).WithMany(e => e.Cards).HasForeignKey(e => e.ColumnId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(e => e.Sprint).WithMany(e => e.Cards).HasForeignKey(e => e.SprintId).OnDelete(DeleteBehavior.SetNull);
             entity.HasOne(e => e.Project).WithMany(e => e.Cards).HasForeignKey(e => e.ProjectId).OnDelete(DeleteBehavior.Restrict);
             entity.HasMany(e => e.Comments).WithOne(e => e.Card).HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);

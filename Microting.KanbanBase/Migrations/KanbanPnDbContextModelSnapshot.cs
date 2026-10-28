@@ -3349,7 +3349,7 @@ namespace Microting.KanbanBase.Migrations
                     b.HasOne("Microting.KanbanBase.Infrastructure.Data.Entities.Column", "Column")
                         .WithMany("Cards")
                         .HasForeignKey("ColumnId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Microting.KanbanBase.Infrastructure.Data.Entities.Project", "Project")
