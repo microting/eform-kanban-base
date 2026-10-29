@@ -29,6 +29,9 @@ public class CardVersion : BaseEntity
     public string? SentryIssueId { get; set; }
     public string? SentryShortId { get; set; }
     public string? SentryPermalink { get; set; }
+    public CardAttention Attention { get; set; } = CardAttention.None;
+    public string? AttentionNote { get; set; }
+    public DateTime? AttentionChangedAt { get; set; }
     public CardSource Source { get; set; } = CardSource.Manual;
     public long? UserbackFeedbackId { get; set; }
 }

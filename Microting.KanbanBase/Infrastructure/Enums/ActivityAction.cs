@@ -16,4 +16,5 @@ public enum ActivityAction
     TaskCompleted,
     DependencyAdded,
     DependencyRemoved,
+    AttentionChanged,
 }

@@ -17,7 +17,7 @@ namespace Microting.KanbanBase.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
@@ -507,6 +507,16 @@ namespace Microting.KanbanBase.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Attention")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("AttentionChangedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("AttentionNote")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
 
                     b.Property<int>("BoardId")
                         .HasColumnType("int");
@@ -1792,6 +1802,15 @@ namespace Microting.KanbanBase.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Attention")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("AttentionChangedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("AttentionNote")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("BoardId")
                         .HasColumnType("int");
