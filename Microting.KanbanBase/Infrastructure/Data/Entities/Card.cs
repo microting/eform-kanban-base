@@ -46,6 +46,11 @@ public class Card : KanbanPnBase
     public string? SentryIssueId { get; set; }
     public string? SentryShortId { get; set; }
     public string? SentryPermalink { get; set; }
+    /// <summary>"Venter på dig" (spec 2026-10-29): the agent is stuck, or a PR waits for the owner.</summary>
+    public CardAttention Attention { get; set; } = CardAttention.None;
+    /// <summary>One line on why, at most 200 characters; null when Attention is None.</summary>
+    public string? AttentionNote { get; set; }
+    public DateTime? AttentionChangedAt { get; set; }
     public virtual ICollection<CardTenant> Tenants { get; set; } = new List<CardTenant>();
     public virtual ICollection<CardConsoleLog> ConsoleLogs { get; set; } = new List<CardConsoleLog>();
     public virtual ICollection<CardNetworkLog> NetworkLogs { get; set; } = new List<CardNetworkLog>();

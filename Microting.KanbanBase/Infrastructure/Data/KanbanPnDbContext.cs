@@ -95,6 +95,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             entity.Property(e => e.SentryIssueId).HasMaxLength(64);
             entity.Property(e => e.SentryShortId).HasMaxLength(64);
             entity.Property(e => e.SentryPermalink).HasMaxLength(500);
+            entity.Property(e => e.AttentionNote).HasMaxLength(200);
             // Deliberately NON-unique: KanbanPnBase.Delete soft-deletes, so a removed card keeps its
             // SentryIssueId and MySQL has no filtered indexes. One live card per (board, Sentry issue)
             // is enforced in SentryCardService (Kanban.Pn) with a lookup that skips removed cards.
