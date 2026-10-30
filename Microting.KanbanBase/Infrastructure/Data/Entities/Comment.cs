@@ -21,4 +21,8 @@ public class Comment : KanbanPnBase
     /// </para>
     /// </summary>
     public long? UserbackCommentId { get; set; }
+
+    /// <summary>Where an integration comment came from outside kanban ("gmail" for a support-mail reply); null for
+    /// every other comment. Set when the comment is written and never changed.</summary>
+    public string? ExternalSource { get; set; }
 }

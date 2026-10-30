@@ -350,6 +350,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             // resolution is by name and the same upstream comment can legitimately land on more
             // than one board.
             entity.HasIndex(e => new { e.CardId, e.UserbackCommentId });
+            entity.Property(e => e.ExternalSource).HasMaxLength(32);
         });
 
         // Attachment
