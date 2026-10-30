@@ -539,6 +539,18 @@ namespace Microting.KanbanBase.Migrations
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<string>("ExternalId")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<string>("ExternalSource")
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<string>("ExternalThreadId")
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)");
+
                     b.Property<int>("FeedbackType")
                         .HasColumnType("int");
 
@@ -621,6 +633,10 @@ namespace Microting.KanbanBase.Migrations
                     b.HasIndex("BoardId", "SentryIssueId");
 
                     b.HasIndex("BoardId", "ColumnId", "Position");
+
+                    b.HasIndex("BoardId", "ExternalSource", "ExternalId");
+
+                    b.HasIndex("BoardId", "ExternalSource", "ExternalThreadId");
 
                     b.HasIndex("BoardId", "ColumnId", "WorkflowState", "Position");
 
@@ -1835,6 +1851,15 @@ namespace Microting.KanbanBase.Migrations
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ExternalId")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ExternalSource")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("ExternalThreadId")
+                        .HasColumnType("longtext");
 
                     b.Property<int>("FeedbackType")
                         .HasColumnType("int");
