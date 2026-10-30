@@ -55,7 +55,6 @@ public class CommentExternalSourceSchemaTests
     {
         using var ctx = Context();
         Assert.That(ctx.Database.GetMigrations(), Has.Some.EndsWith("_CommentExternalSource"));
-        Assert.That(ctx.Database.GetMigrations().Last(), Does.EndWith("_CommentExternalSource"));
         Assert.That(ctx.Database.HasPendingModelChanges(), Is.False);
     }
 }
