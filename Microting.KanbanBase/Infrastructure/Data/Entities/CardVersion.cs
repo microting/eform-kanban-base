@@ -32,6 +32,9 @@ public class CardVersion : BaseEntity
     public CardAttention Attention { get; set; } = CardAttention.None;
     public string? AttentionNote { get; set; }
     public DateTime? AttentionChangedAt { get; set; }
+    public string? ExternalSource { get; set; }
+    public string? ExternalId { get; set; }
+    public string? ExternalThreadId { get; set; }
     public CardSource Source { get; set; } = CardSource.Manual;
     public long? UserbackFeedbackId { get; set; }
 }

@@ -51,6 +51,12 @@ public class Card : KanbanPnBase
     /// <summary>One line on why, at most 200 characters; null when Attention is None.</summary>
     public string? AttentionNote { get; set; }
     public DateTime? AttentionChangedAt { get; set; }
+    /// <summary>Where an integration card came from outside kanban ("gmail" for support mail), with its id there.
+    /// (BoardId, ExternalSource, ExternalId) is the integration's dedupe key; null for every other card.</summary>
+    public string? ExternalSource { get; set; }
+    public string? ExternalId { get; set; }
+    /// <summary>The source's conversation id (a Gmail thread): later messages of it become comments on this card.</summary>
+    public string? ExternalThreadId { get; set; }
     public virtual ICollection<CardTenant> Tenants { get; set; } = new List<CardTenant>();
     public virtual ICollection<CardConsoleLog> ConsoleLogs { get; set; } = new List<CardConsoleLog>();
     public virtual ICollection<CardNetworkLog> NetworkLogs { get; set; } = new List<CardNetworkLog>();

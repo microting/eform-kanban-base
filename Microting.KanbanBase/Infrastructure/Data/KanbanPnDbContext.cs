@@ -100,6 +100,13 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             // SentryIssueId and MySQL has no filtered indexes. One live card per (board, Sentry issue)
             // is enforced in SentryCardService (Kanban.Pn) with a lookup that skips removed cards.
             entity.HasIndex(e => new { e.BoardId, e.SentryIssueId });
+            entity.Property(e => e.ExternalSource).HasMaxLength(32);
+            entity.Property(e => e.ExternalId).HasMaxLength(128);
+            entity.Property(e => e.ExternalThreadId).HasMaxLength(128);
+            // Non-unique for the same reason as (BoardId, SentryIssueId): one card per (board, source, id) is enforced
+            // in Kanban.Pn's EmailMessageService, which also finds archived cards (an archived card is not made again).
+            entity.HasIndex(e => new { e.BoardId, e.ExternalSource, e.ExternalId });
+            entity.HasIndex(e => new { e.BoardId, e.ExternalSource, e.ExternalThreadId });
             entity.HasIndex(e => new { e.BoardId, e.ColumnId, e.WorkflowState, e.Position });
             entity.HasIndex(e => e.SprintId);
             entity.HasIndex(e => e.ProjectId);
