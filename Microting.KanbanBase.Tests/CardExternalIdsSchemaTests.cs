@@ -64,10 +64,10 @@ public class CardExternalIdsSchemaTests
     }
 
     [Test]
-    public void Migrations_EndWithCardExternalIds_AndMatchTheModel()
+    public void Migrations_IncludeCardExternalIds_AndMatchTheModel()
     {
         using var ctx = Context();
-        Assert.That(ctx.Database.GetMigrations().Last(), Does.EndWith("_CardExternalIds"));
+        Assert.That(ctx.Database.GetMigrations(), Has.Some.EndWith("_CardExternalIds"));
         Assert.That(ctx.Database.HasPendingModelChanges(), Is.False);
     }
 }
