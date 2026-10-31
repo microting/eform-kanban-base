@@ -52,7 +52,8 @@ INSERT INTO Cards (Id, BoardId, ColumnId, Title, Position, CardType, Priority, F
 INSERT INTO CardTenants (CardId, CustomerNo, OrganizationName, FetchedAt, CreatedAt, UpdatedAt, WorkflowState, CreatedByUserId, UpdatedByUserId, Version)
   VALUES (30, '922', NULL, {now}, {now}, {now}, 'created', 0, 0, 1),
          (31, '922', 'Vestjysk Kontrol A/S', {now}, {now}, {now}, 'created', 0, 0, 1),
-         (31, '1001', NULL, {now}, {now}, {now}, 'created', 0, 0, 1),
+         (30, '1001', 'Fresh Name', {now}, {now}, {now}, 'created', 0, 0, 1),
+         (31, '1001', 'Stale Name', {now} - INTERVAL 1 DAY, {now}, {now}, 'created', 0, 0, 1),
          (30, '555', 'Gone', {now}, {now}, {now}, 'removed', 0, 0, 1),
          (30, '777', 'No State', {now}, {now}, {now}, NULL, 0, 0, 1);
 INSERT INTO Projects (Id, Name, CreatedAt, UpdatedAt, WorkflowState, CreatedByUserId, UpdatedByUserId, Version) VALUES (40, 'P', {now}, {now}, 'created', 0, 0, 1);
@@ -71,9 +72,10 @@ INSERT INTO IntegrationApiKeys (Id, Name, KeyPrefix, KeyHash, Scope, ServiceUser
 
         var customers = await ctx.Customers.OrderBy(c => c.CustomerNo).ToListAsync();
         // '555' only has a removed link: no customer is made for it. '777' has a NULL state, which is not removed.
+        // '1001' takes the most recently fetched name, not the one on the newest row.
         Assert.That(customers.Select(c => (c.WorkspaceId, c.CustomerNo, c.Name)), Is.EqualTo(new[]
         {
-            (1, (string?)"1001", "1001"),
+            (1, (string?)"1001", "Fresh Name"),
             (1, (string?)"777", "No State"),
             (1, (string?)"922", "Vestjysk Kontrol A/S"),
         }));

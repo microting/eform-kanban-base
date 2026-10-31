@@ -424,14 +424,14 @@ namespace Microting.KanbanBase.Migrations
                 onDelete: ReferentialAction.Restrict);
 
             // Existing tenant links (workspace 1 only exists so far) become Customer rows, one per customer number;
-            // the name is the newest non-empty organisation name, else the number itself.
+            // the name is the most recently fetched non-empty organisation name, else the number itself.
             migrationBuilder.Sql(@"
 INSERT INTO Customers (WorkspaceId, Name, CustomerNo, CreatedAt, UpdatedAt, WorkflowState, CreatedByUserId, UpdatedByUserId, Version)
 SELECT 1,
        LEFT(COALESCE(
            (SELECT t2.OrganizationName FROM CardTenants t2
              WHERE t2.CustomerNo = t.CustomerNo AND t2.OrganizationName IS NOT NULL AND t2.OrganizationName <> ''
-             ORDER BY t2.Id DESC LIMIT 1),
+             ORDER BY t2.FetchedAt DESC, t2.Id DESC LIMIT 1),
            t.CustomerNo), 255),
        t.CustomerNo, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6), 'created', 0, 0, 1
 FROM CardTenants t
