@@ -435,12 +435,14 @@ SELECT 1,
            t.CustomerNo), 255),
        t.CustomerNo, UTC_TIMESTAMP(6), UTC_TIMESTAMP(6), 'created', 0, 0, 1
 FROM CardTenants t
-WHERE t.WorkflowState <> 'removed'
+WHERE COALESCE(t.WorkflowState, '') <> 'removed'
 GROUP BY t.CustomerNo;");
             migrationBuilder.Sql(@"
 UPDATE CardTenants t
 JOIN Customers c ON c.WorkspaceId = 1 AND c.CustomerNo = t.CustomerNo
 SET t.CustomerId = c.Id;");
+            // The backfill needed the column default (1); new rows must name their workspace explicitly.
+            migrationBuilder.Sql("ALTER TABLE Boards ALTER COLUMN WorkspaceId DROP DEFAULT; ALTER TABLE Projects ALTER COLUMN WorkspaceId DROP DEFAULT; ALTER TABLE IntegrationApiKeys ALTER COLUMN WorkspaceId DROP DEFAULT;");
         }
 
         /// <inheritdoc />
