@@ -86,6 +86,12 @@ INSERT INTO IntegrationApiKeys (Id, Name, KeyPrefix, KeyHash, Scope, ServiceUser
             Is.EqualTo(customers.Single(c => c.CustomerNo == "777").Id));
         Assert.That(await ctx.CardTenants.Where(t => t.CustomerNo == "555").Select(t => t.CustomerId).SingleAsync(), Is.Null);
 
+        // Version 1 snapshots exist for the seeded workspace and each backfilled customer.
+        Assert.That(await ctx.WorkspaceVersions.Where(v => v.WorkspaceId == 1).Select(v => new { v.Name, v.Slug, v.Version }).SingleAsync(),
+            Is.EqualTo(new { Name = "Microting", Slug = "microting", Version = 1 }));
+        Assert.That(await ctx.CustomerVersions.OrderBy(v => v.CustomerNo).Select(v => new { v.CustomerId, v.Name, v.Version }).ToListAsync(),
+            Is.EqualTo(customers.Select(c => new { CustomerId = c.Id, c.Name, Version = 1 })));
+
         // The column default (1) only served the backfill: new boards, projects and keys must name their workspace.
         await ctx.Database.OpenConnectionAsync();
         await using var cmd = ctx.Database.GetDbConnection().CreateCommand();
@@ -93,5 +99,10 @@ INSERT INTO IntegrationApiKeys (Id, Name, KeyPrefix, KeyHash, Scope, ServiceUser
 WHERE TABLE_SCHEMA = DATABASE() AND COLUMN_NAME = 'WorkspaceId'
   AND TABLE_NAME IN ('Boards', 'Projects', 'IntegrationApiKeys') AND COLUMN_DEFAULT IS NULL";
         Assert.That(Convert.ToInt32(await cmd.ExecuteScalarAsync()), Is.EqualTo(3));
+
+        // The backfill's temporary index is gone again.
+        cmd.CommandText = @"SELECT COUNT(*) FROM information_schema.STATISTICS
+WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'CardTenants' AND INDEX_NAME = 'IX_CardTenants_CustomerNo_Backfill'";
+        Assert.That(Convert.ToInt32(await cmd.ExecuteScalarAsync()), Is.EqualTo(0));
     }
 }

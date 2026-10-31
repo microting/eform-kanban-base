@@ -425,6 +425,8 @@ namespace Microting.KanbanBase.Migrations
 
             // Existing tenant links (workspace 1 only exists so far) become Customer rows, one per customer number;
             // the name is the most recently fetched non-empty organisation name, else the number itself.
+            // A temporary CustomerNo-leading index keeps the per-customer name lookup and the link update off full scans.
+            migrationBuilder.Sql("CREATE INDEX IX_CardTenants_CustomerNo_Backfill ON CardTenants (CustomerNo, FetchedAt);");
             migrationBuilder.Sql(@"
 INSERT INTO Customers (WorkspaceId, Name, CustomerNo, CreatedAt, UpdatedAt, WorkflowState, CreatedByUserId, UpdatedByUserId, Version)
 SELECT 1,
@@ -441,6 +443,14 @@ GROUP BY t.CustomerNo;");
 UPDATE CardTenants t
 JOIN Customers c ON c.WorkspaceId = 1 AND c.CustomerNo = t.CustomerNo
 SET t.CustomerId = c.Id;");
+            migrationBuilder.Sql("DROP INDEX IX_CardTenants_CustomerNo_Backfill ON CardTenants;");
+            // Version 1 snapshots for the seeded workspace and the backfilled customers, as Create() would write them.
+            migrationBuilder.Sql(@"
+INSERT INTO WorkspaceVersions (WorkspaceId, Name, Slug, CreatedAt, UpdatedAt, WorkflowState, CreatedByUserId, UpdatedByUserId, Version)
+SELECT Id, Name, Slug, CreatedAt, UpdatedAt, WorkflowState, CreatedByUserId, UpdatedByUserId, Version FROM Workspaces;");
+            migrationBuilder.Sql(@"
+INSERT INTO CustomerVersions (CustomerId, WorkspaceId, Name, CustomerNo, CreatedAt, UpdatedAt, WorkflowState, CreatedByUserId, UpdatedByUserId, Version)
+SELECT Id, WorkspaceId, Name, CustomerNo, CreatedAt, UpdatedAt, WorkflowState, CreatedByUserId, UpdatedByUserId, Version FROM Customers;");
             // The backfill needed the column default (1); new rows must name their workspace explicitly.
             migrationBuilder.Sql("ALTER TABLE Boards ALTER COLUMN WorkspaceId DROP DEFAULT; ALTER TABLE Projects ALTER COLUMN WorkspaceId DROP DEFAULT; ALTER TABLE IntegrationApiKeys ALTER COLUMN WorkspaceId DROP DEFAULT;");
         }
