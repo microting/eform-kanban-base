@@ -7,4 +7,5 @@ public class BoardVersion : BaseEntity
     public int BoardId { get; set; }
     public string Name { get; set; }
     public string? Description { get; set; }
+    public int WorkspaceId { get; set; }
 }

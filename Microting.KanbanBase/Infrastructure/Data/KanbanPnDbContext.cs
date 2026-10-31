@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microting.eFormApi.BasePn.Abstractions;
 using Microting.eFormApi.BasePn.Infrastructure.Database.Entities;
@@ -36,6 +37,10 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<UserbackImportRun> UserbackImportRuns { get; set; }
     public DbSet<UserbackImportLogEntry> UserbackImportLogEntries { get; set; }
     public DbSet<UserbackProjectSyncState> UserbackProjectSyncStates { get; set; }
+    public DbSet<Workspace> Workspaces { get; set; }
+    public DbSet<WorkspaceMember> WorkspaceMembers { get; set; }
+    public DbSet<Customer> Customers { get; set; }
+    public DbSet<Invitation> Invitations { get; set; }
 
     // Version entity DbSets
     public DbSet<CardTenantVersion> CardTenantVersions { get; set; }
@@ -63,6 +68,10 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<UserbackImportRunVersion> UserbackImportRunVersions { get; set; }
     public DbSet<UserbackImportLogEntryVersion> UserbackImportLogEntryVersions { get; set; }
     public DbSet<UserbackProjectSyncStateVersion> UserbackProjectSyncStateVersions { get; set; }
+    public DbSet<WorkspaceVersion> WorkspaceVersions { get; set; }
+    public DbSet<WorkspaceMemberVersion> WorkspaceMemberVersions { get; set; }
+    public DbSet<CustomerVersion> CustomerVersions { get; set; }
+    public DbSet<InvitationVersion> InvitationVersions { get; set; }
 
     // Plugin common tables
     public DbSet<PluginConfigurationValue> PluginConfigurationValues { get; set; }
@@ -294,7 +303,9 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
         {
             entity.Property(e => e.CustomerNo).HasMaxLength(32).IsRequired();
             entity.HasIndex(e => new { e.CardId, e.CustomerNo });
+            entity.HasIndex(e => e.CustomerId);
             entity.HasOne(e => e.Card).WithMany(e => e.Tenants).HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Customer).WithMany().HasForeignKey(e => e.CustomerId).OnDelete(DeleteBehavior.Restrict);
         });
 
         // IntegrationApiKey
@@ -303,7 +314,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             entity.Property(e => e.Name).HasMaxLength(200).IsRequired();
             entity.Property(e => e.KeyPrefix).HasMaxLength(16).IsRequired();
             entity.Property(e => e.KeyHash).HasMaxLength(64).IsFixedLength().IsRequired();
-            entity.Property(e => e.Scope).HasMaxLength(64).IsRequired();
+            entity.Property(e => e.Scope).HasMaxLength(256).IsRequired();
             // Unique is safe here: hashes of random 256-bit keys never repeat, even after a soft delete.
             entity.HasIndex(e => e.KeyHash).IsUnique();
         });
@@ -366,5 +377,56 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             entity.Property(e => e.SourceUrlHash).HasMaxLength(64).IsFixedLength();
             entity.HasIndex(e => new { e.CardId, e.SourceUrlHash });
         });
+
+        // Workspaces (sub-project C, spec 2026-10-30 §4.1)
+        modelBuilder.Entity<Workspace>(entity =>
+        {
+            entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.Slug).HasMaxLength(64).IsRequired();
+            entity.HasIndex(e => e.Slug).IsUnique();
+            entity.HasData(new Workspace
+            {
+                Id = 1, Name = "Microting", Slug = "microting",
+                CreatedAt = new DateTime(2026, 10, 30, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2026, 10, 30, 0, 0, 0, DateTimeKind.Utc),
+                WorkflowState = "created", Version = 1,
+            });
+        });
+
+        modelBuilder.Entity<WorkspaceMember>(entity =>
+        {
+            // Not unique: soft delete keeps removed rows; one live row per pair is enforced in Kanban.Pn.
+            entity.HasIndex(e => new { e.WorkspaceId, e.UserId });
+            entity.HasIndex(e => e.UserId);
+            entity.HasOne(e => e.Workspace).WithMany().HasForeignKey(e => e.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(e => e.Customer).WithMany().HasForeignKey(e => e.CustomerId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Customer>(entity =>
+        {
+            entity.Property(e => e.Name).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.CustomerNo).HasMaxLength(32);
+            entity.HasIndex(e => new { e.WorkspaceId, e.CustomerNo });
+            entity.HasOne(e => e.Workspace).WithMany().HasForeignKey(e => e.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Invitation>(entity =>
+        {
+            entity.Property(e => e.Email).HasMaxLength(255).IsRequired();
+            entity.Property(e => e.TokenHash).HasMaxLength(64).IsFixedLength().IsRequired();
+            // Unique is safe: hashes of random 256-bit tokens never repeat.
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.HasIndex(e => new { e.WorkspaceId, e.Email });
+            entity.HasOne(e => e.Workspace).WithMany().HasForeignKey(e => e.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Customer>().WithMany().HasForeignKey(e => e.CustomerId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Board>().HasOne(e => e.Workspace).WithMany().HasForeignKey(e => e.WorkspaceId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<Board>().HasIndex(e => e.WorkspaceId);
+        modelBuilder.Entity<Project>().HasOne(e => e.Workspace).WithMany().HasForeignKey(e => e.WorkspaceId)
+            .OnDelete(DeleteBehavior.Restrict);
+        modelBuilder.Entity<IntegrationApiKey>().HasOne(e => e.Workspace).WithMany().HasForeignKey(e => e.WorkspaceId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

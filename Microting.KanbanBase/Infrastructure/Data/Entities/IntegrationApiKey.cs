@@ -15,4 +15,6 @@ public class IntegrationApiKey : KanbanPnBase
     public int ServiceUserId { get; set; }
     public DateTime? LastUsedAt { get; set; }
     public DateTime? RevokedAt { get; set; }
+    public int WorkspaceId { get; set; }
+    public virtual Workspace Workspace { get; set; } = null!;
 }

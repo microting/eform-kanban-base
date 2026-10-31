@@ -12,4 +12,6 @@ public class CardTenant : KanbanPnBase
     public string? CvrNo { get; set; }
     public string? PaymentStatus { get; set; }
     public DateTime FetchedAt { get; set; }
+    public int? CustomerId { get; set; }
+    public virtual Customer? Customer { get; set; }
 }
