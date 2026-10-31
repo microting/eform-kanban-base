@@ -6,6 +6,8 @@ public class Board : KanbanPnBase
 {
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public int WorkspaceId { get; set; }
+    public virtual Workspace Workspace { get; set; } = null!;
 
     public virtual ICollection<Column> Columns { get; set; } = new List<Column>();
     public virtual ICollection<Sprint> Sprints { get; set; } = new List<Sprint>();

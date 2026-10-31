@@ -12,4 +12,5 @@ public class CardTenantVersion : BaseEntity
     public string? CvrNo { get; set; }
     public string? PaymentStatus { get; set; }
     public DateTime FetchedAt { get; set; }
+    public int? CustomerId { get; set; }
 }

@@ -13,4 +13,5 @@ public class IntegrationApiKeyVersion : BaseEntity
     public int ServiceUserId { get; set; }
     public DateTime? LastUsedAt { get; set; }
     public DateTime? RevokedAt { get; set; }
+    public int WorkspaceId { get; set; }
 }
