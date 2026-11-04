@@ -41,6 +41,13 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<WorkspaceMember> WorkspaceMembers { get; set; }
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Invitation> Invitations { get; set; }
+    public DbSet<NotificationPreference> NotificationPreferences { get; set; }
+    public DbSet<NotificationQuietHours> NotificationQuietHours { get; set; }
+    public DbSet<DeviceToken> DeviceTokens { get; set; }
+    public DbSet<CardFollower> CardFollowers { get; set; }
+    public DbSet<NotificationOutbox> NotificationOutboxes { get; set; }
+    public DbSet<AnswerLink> AnswerLinks { get; set; }
+    public DbSet<WorkspaceWebhook> WorkspaceWebhooks { get; set; }
 
     // Version entity DbSets
     public DbSet<CardTenantVersion> CardTenantVersions { get; set; }
@@ -72,6 +79,13 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
     public DbSet<WorkspaceMemberVersion> WorkspaceMemberVersions { get; set; }
     public DbSet<CustomerVersion> CustomerVersions { get; set; }
     public DbSet<InvitationVersion> InvitationVersions { get; set; }
+    public DbSet<NotificationPreferenceVersion> NotificationPreferenceVersions { get; set; }
+    public DbSet<NotificationQuietHoursVersion> NotificationQuietHoursVersions { get; set; }
+    public DbSet<DeviceTokenVersion> DeviceTokenVersions { get; set; }
+    public DbSet<CardFollowerVersion> CardFollowerVersions { get; set; }
+    public DbSet<NotificationOutboxVersion> NotificationOutboxVersions { get; set; }
+    public DbSet<AnswerLinkVersion> AnswerLinkVersions { get; set; }
+    public DbSet<WorkspaceWebhookVersion> WorkspaceWebhookVersions { get; set; }
 
     // Plugin common tables
     public DbSet<PluginConfigurationValue> PluginConfigurationValues { get; set; }
@@ -428,5 +442,56 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             .OnDelete(DeleteBehavior.Restrict);
         modelBuilder.Entity<IntegrationApiKey>().HasOne(e => e.Workspace).WithMany().HasForeignKey(e => e.WorkspaceId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Notifications and answers (sub-project A, spec 2026-10-30 §5, §7)
+        modelBuilder.Entity<NotificationPreference>(entity =>
+        {
+            // Never soft-deleted (switches are changed, not removed), so a unique index is safe and stops duplicates.
+            entity.HasIndex(e => new { e.UserId, e.WorkspaceId, e.Event }).IsUnique();
+            entity.HasIndex(e => new { e.WorkspaceId, e.Event, e.AllCards });
+        });
+        modelBuilder.Entity<NotificationQuietHours>(entity =>
+        {
+            entity.Property(e => e.TimeZone).HasMaxLength(64).IsRequired();
+            entity.HasIndex(e => e.UserId).IsUnique();
+        });
+        modelBuilder.Entity<DeviceToken>(entity =>
+        {
+            entity.Property(e => e.AppId).HasMaxLength(32).IsRequired();
+            entity.Property(e => e.InstallationId).HasMaxLength(128).IsRequired();
+            entity.Property(e => e.Platform).HasMaxLength(16).IsRequired();
+            entity.Property(e => e.Token).HasMaxLength(512).IsRequired();
+            entity.Property(e => e.AppVersion).HasMaxLength(32);
+            // Without WorkflowState on purpose: registration revives a removed row (as TimePlanning's DeviceToken).
+            entity.HasIndex(e => new { e.AppId, e.InstallationId }).IsUnique();
+            entity.HasIndex(e => new { e.UserId, e.WorkflowState });
+            entity.HasIndex(e => e.Token);
+        });
+        modelBuilder.Entity<CardFollower>(entity =>
+        {
+            entity.HasIndex(e => new { e.CardId, e.UserId }).IsUnique();
+            entity.HasIndex(e => e.UserId);
+            entity.HasOne(e => e.Card).WithMany().HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<NotificationOutbox>(entity =>
+        {
+            entity.Property(e => e.Payload).HasColumnType("longtext");
+            entity.Property(e => e.LastError).HasMaxLength(500);
+            entity.HasIndex(e => new { e.Status, e.NextAttemptAt });
+            entity.HasIndex(e => new { e.RecipientUserId, e.CardId, e.Event, e.Channel, e.Status });
+        });
+        modelBuilder.Entity<AnswerLink>(entity =>
+        {
+            entity.HasIndex(e => new { e.CardId, e.TaskId });
+            entity.HasIndex(e => e.CommentId).IsUnique();
+        });
+        modelBuilder.Entity<WorkspaceWebhook>(entity =>
+        {
+            entity.Property(e => e.Url).HasMaxLength(1000).IsRequired();
+            entity.Property(e => e.SecretCipher).HasMaxLength(512).IsRequired();
+            entity.Property(e => e.SecretIv).HasMaxLength(64).IsRequired();
+            entity.HasIndex(e => e.WorkspaceId).IsUnique();
+            entity.HasOne(e => e.Workspace).WithMany().HasForeignKey(e => e.WorkspaceId).OnDelete(DeleteBehavior.Restrict);
+        });
     }
 }
