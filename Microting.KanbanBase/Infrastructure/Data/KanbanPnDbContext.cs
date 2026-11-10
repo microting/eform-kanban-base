@@ -129,6 +129,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             // Non-unique for the same reason as (BoardId, SentryIssueId): one card per (board, source, id) is enforced
             // in Kanban.Pn's EmailMessageService, which also finds archived cards (an archived card is not made again).
             entity.HasIndex(e => new { e.BoardId, e.ExternalSource, e.ExternalId });
+            entity.HasIndex(e => new { e.ExternalSource, e.ExternalId });
             entity.HasIndex(e => new { e.BoardId, e.ExternalSource, e.ExternalThreadId });
             entity.HasIndex(e => new { e.BoardId, e.ColumnId, e.WorkflowState, e.Position });
             entity.HasIndex(e => e.SprintId);
@@ -318,6 +319,7 @@ public class KanbanPnDbContext : DbContext, IPluginDbContext
             entity.Property(e => e.CustomerNo).HasMaxLength(32).IsRequired();
             entity.HasIndex(e => new { e.CardId, e.CustomerNo });
             entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.CustomerNo);
             entity.HasOne(e => e.Card).WithMany(e => e.Tenants).HasForeignKey(e => e.CardId).OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(e => e.Customer).WithMany().HasForeignKey(e => e.CustomerId).OnDelete(DeleteBehavior.Restrict);
         });
