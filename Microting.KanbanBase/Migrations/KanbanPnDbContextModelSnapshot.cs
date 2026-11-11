@@ -736,6 +736,8 @@ namespace Microting.KanbanBase.Migrations
 
                     b.HasIndex("BoardId", "SentryIssueId");
 
+                    b.HasIndex("ExternalSource", "ExternalId");
+
                     b.HasIndex("BoardId", "ColumnId", "Position");
 
                     b.HasIndex("BoardId", "ExternalSource", "ExternalId");
@@ -1944,6 +1946,8 @@ namespace Microting.KanbanBase.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
+
+                    b.HasIndex("CustomerNo");
 
                     b.HasIndex("CardId", "CustomerNo");
 
